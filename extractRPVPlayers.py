@@ -8,7 +8,7 @@ from rscapi.rest import ApiException
 import os
 
 # Ignore the first few rows of the file
-RPVTable = pd.read_csv('RSCC S22 RPV - Sorted RPV.csv', skiprows=4 )
+RPVTable = pd.read_csv('RSC_RPV_Sorted.csv', skiprows=4 )
 
 # Extract only the Rival Tier Players
 RPVTable = RPVTable[RPVTable["Tier"] == "Rival"]
