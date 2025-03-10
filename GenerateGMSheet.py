@@ -1,10 +1,8 @@
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import os
-from openpyxl import load_workbook, Workbook
-from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
-from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment, PatternFill
+from openpyxl.worksheet.table import Table
 from openpyxl.utils import get_column_letter
 
 SchedulePath = "Input/RSC_Schedule.xlsx"
@@ -127,12 +125,10 @@ def LinearizeScrimDaySchedule (scheduleSheet, tierInfo):
         
         OfficialSheet = pd.concat([OfficialSheet, Row], axis=1)
     
-    print(OfficialSheet)
     OfficialSheet = OfficialSheet.loc[:, ~OfficialSheet.columns.isna()]
     ScrimNumbers = len(OfficialSheet["Game"].values)
     OfficialSheet["Game"] =  ["Match Day " + str(i) for i in range(1, ScrimNumbers + 1)]
     OfficialSheet.rename(columns={"Game": "Match Day"}, inplace=True)
-    print(OfficialSheet)
     
     return OfficialSheet
 
@@ -179,79 +175,11 @@ def PasteDataFrame(dataFrame, workSheet, startRow = 1, startCol = 1):
         for col_num, value in enumerate(row_data, start=startCol):
             workSheet.cell(row=row_num, column=col_num).value = value
 
-#def PasteDataFrame(dataFrame, workSheet, startRow=1, startCol=1):
-#    for j, col_name in enumerate(dataFrame.columns, start=startCol):  # Write column headers
-#        cell = workSheet.cell(row=startRow, column=j)
-#        
-#        # Skip if merged cell
-#        if cell.coordinate in workSheet.merged_cells:
-#            print(f"Skipping merged cell: {cell.coordinate}")
-#            continue
-#        
-#        cell.value = col_name
-#
-#    for row_num, row_data in enumerate(dataFrame.itertuples(index=False), start=startRow + 1):
-#        for col_num, value in enumerate(row_data, start=startCol):
-#            cell = workSheet.cell(row=row_num, column=col_num)
-#            
-#            # Skip if merged cell
-#            if cell.coordinate in workSheet.merged_cells:
-#                print(f"Skipping merged cell: {cell.coordinate}")
-#                continue
-#            
-#            cell.value = value
-
 def AddDataFrameAsTable (dataFrame, workSheet, tableName, startRow = 1, startCol = 1):
     PasteDataFrame(dataFrame, workSheet, startRow, startCol)
 
     if (tableName not in workSheet.tables):
         workSheet.add_table(Table(displayName=tableName, ref=GetExcelRange(startRow, startCol, dataFrame)))
-
-
-#def GetTierTables (sheetInfo):
-#    sheet = GetTable(sheetInfo["sheet"], sheetInfo["sheetName"], sheetInfo["skiprows"], sheetInfo["usecols"], sheetInfo["nrows"])
-#
-#    TierTables = []
-#
-#    for tier in Tiers:
-#        tierTable = sheet[sheet["Tier"] == tier]
-#        tierTable.reset_index(drop=True, inplace=True)
-#        tierTable.columns = tierTable.columns.str.strip()
-#        TierTables.append(tierTable)
-#        
-#    return TierTables
-#
-#def GetStatsSheet (statsInfo):
-#    RPVTables = GetTierTables(statsInfo[0])
-#    SBVTables = GetTierTables(statsInfo[1])
-#    IDRTables = GetTierTables(statsInfo[2])
-#    
-#    MergedTables = []
-#    
-#    for i in range(len(Tiers)):
-#        
-#        IDRTables[i].rename(columns={"Team": "Current Team"}, inplace=True)
-#        
-#        mergedTable = (
-#            RPVTables[i]
-#            .merge(SBVTables[i], on=["Name"])
-#            .merge(IDRTables[i], on=["Name"])
-#            )
-#        
-#        mergedTable = mergedTable.rename(columns={col: col.replace("_x", "") for col in mergedTable.columns if "_x" in col})
-#        mergedTable = mergedTable.rename(columns={col: col.replace("(s)", "_y") for col in mergedTable.columns if "(s)" in col})
-#
-#        # Remove columns containing "_y" or "_z"
-#        remove_cols = [col for col in mergedTable.columns if "_y" in col or "_z" in col]
-#        mergedTable = mergedTable.drop(columns=remove_cols)
-#        
-#        mergedTable = mergedTable.loc[:, ~mergedTable.columns.duplicated()]
-#        
-#        MergedTables.append(mergedTable)
-#    
-#    StatsInfo = pd.concat(MergedTables, keys=Tiers)
-#    
-#    return StatsInfo
 
 Tiers = [
     "Premier",
@@ -270,8 +198,6 @@ schedulePages = ScheduleSheet.sheet_names
 MatchDayScheduleSheetName = schedulePages[0]
 
 print("Extracting Match Day Schedules...")
-
-# Master Scrim is one shorter than reported
 
 TierInfo = []
 TierInfo.append({"matchSheetName": schedulePages[0], "scrimSheetName" : schedulePages[1], "skiprowsMatch": 5, "usecolsMatch": "B:I", "nrowsMatch": 49 - 6,       "skiprowsScrim": 13, "usecolsScrim": "B:L", "nrowsScrim": 49-14, "preseasonDays": 3, "matchDays": 16, "playoffDays": 2, "spacing": 4, "matchDaysScrim": 16, "spacingScrim" : 2, "hasLunarConference": True, "hasDivisions": False})
@@ -333,28 +259,21 @@ WorkSheet = WorkBook["Schedules"]
 rowIndex = 1
 
 for i in range(len(Tiers)):
-    print("Tiers : " + Tiers[i])
-    
-    print("Row Index : " + str(rowIndex))
-    
     WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex + 1, end_column=MatchScheduleSheets[Tiers[i]].columns.size)
     WorkSheet.cell(row=rowIndex, column=1).value = Tiers[i] + " Match Schedule"
     WorkSheet.cell(row=rowIndex, column=1).alignment = Alignment(horizontal='center', vertical='center')
 
     rowIndex += 2
-    print("Row Index : " + str(rowIndex))
     
     # Paste Match Schedule DataFrame
     AddDataFrameAsTable(MatchScheduleSheets[Tiers[i]], WorkSheet, Tiers[i] + "MatchSchedule", startRow=rowIndex)
     
     rowIndex += MatchScheduleSheets[Tiers[i]].shape[0] + 1
-    print("Row Index : " + str(rowIndex))
     
     WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex, end_column=MatchScheduleSheets[Tiers[i]].columns.size)
     WorkSheet.cell(row=rowIndex, column=1).fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
     
     rowIndex += 1
-    print("Row Index : " + str(rowIndex))
     
     # Scrim
     WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex + 1, end_column=ScrimScheduleSheets[Tiers[i]].columns.size)
@@ -362,18 +281,15 @@ for i in range(len(Tiers)):
     WorkSheet.cell(row=rowIndex, column=1).alignment = Alignment(horizontal='center', vertical='center')
     
     rowIndex += 2
-    print("Row Index : " + str(rowIndex))
     
     AddDataFrameAsTable(ScrimScheduleSheets[Tiers[i]], WorkSheet, Tiers[i] + "ScrimSchedule", startRow=rowIndex)
     
     rowIndex += ScrimScheduleSheets[Tiers[i]].shape[0] + 1
-    print("Row Index : " + str(rowIndex))
     
     WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex, end_column=ScrimScheduleSheets[Tiers[i]].columns.size)
     WorkSheet.cell(row=rowIndex, column=1).fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
     
     rowIndex += 1
-    print("Row Index : " + str(rowIndex))
 
 if ("Player Stats" not in WorkBook.sheetnames):
     WorkBook.create_sheet("Player Stats")
