@@ -4,6 +4,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 from openpyxl.worksheet.table import Table
 from openpyxl.utils import get_column_letter
+import re
 
 SchedulePath = "Input/RSC_Schedule.xlsx"
 RPVPath = "Input/RSC_RPV.xlsx"
@@ -247,59 +248,202 @@ TeamInfoTable = SBVSheet.parse("Sorted Team Stats", skiprows=TeamsInfoCoords["sk
 
 print("Teams Info Extracted Successfully!")
 
-print("Generating GM Excel Sheet...")
+print(StatsSheet)
 
-WorkBook = load_workbook("Template/RSC_Info_Template.xlsx")
+print(TeamInfoTable)
 
-if ("Schedules" not in WorkBook.sheetnames):
-    WorkBook.create_sheet("Schedules")
-WorkSheet = WorkBook["Schedules"]
 
-rowIndex = 1
+def sanitize_filename(filename, replacement="_"):
+    # Define invalid characters for Windows file names
+    invalid_chars = r'[\\/:*?"<>|]'
+    # Replace them with the given replacement character (default: "_")
+    return re.sub(invalid_chars, replacement, filename)
 
-for i in range(len(Tiers)):
-    WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex + 1, end_column=MatchScheduleSheets[Tiers[i]].columns.size)
-    WorkSheet.cell(row=rowIndex, column=1).value = Tiers[i] + " Match Schedule"
-    WorkSheet.cell(row=rowIndex, column=1).alignment = Alignment(horizontal='center', vertical='center')
 
-    rowIndex += 2
+def GenerateObsidianTierFiles ():
     
-    # Paste Match Schedule DataFrame
-    AddDataFrameAsTable(MatchScheduleSheets[Tiers[i]], WorkSheet, Tiers[i] + "MatchSchedule", startRow=rowIndex)
+    os.makedirs(f"Output/TierFiles", exist_ok=True)
     
-    rowIndex += MatchScheduleSheets[Tiers[i]].shape[0] + 1
+    rank = 1
     
-    WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex, end_column=MatchScheduleSheets[Tiers[i]].columns.size)
-    WorkSheet.cell(row=rowIndex, column=1).fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
-    
-    rowIndex += 1
-    
-    # Scrim
-    WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex + 1, end_column=ScrimScheduleSheets[Tiers[i]].columns.size)
-    WorkSheet.cell(row=rowIndex, column=1).value = Tiers[i] + " Scrim Schedule"
-    WorkSheet.cell(row=rowIndex, column=1).alignment = Alignment(horizontal='center', vertical='center')
-    
-    rowIndex += 2
-    
-    AddDataFrameAsTable(ScrimScheduleSheets[Tiers[i]], WorkSheet, Tiers[i] + "ScrimSchedule", startRow=rowIndex)
-    
-    rowIndex += ScrimScheduleSheets[Tiers[i]].shape[0] + 1
-    
-    WorkSheet.merge_cells(start_row=rowIndex, start_column=1, end_row=rowIndex, end_column=ScrimScheduleSheets[Tiers[i]].columns.size)
-    WorkSheet.cell(row=rowIndex, column=1).fill = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
-    
-    rowIndex += 1
+    for i in range(len(Tiers)):
+        Tier = Tiers[i]
+        
+        obsidianFileName = sanitize_filename(Tier) + ".md"
+        
+        obsidianFileContent = "---\n"
+        obsidianFileContent += f"Tier: {Tier}\n"
+        obsidianFileContent += f"Tier Rank: {rank}\n"
+        obsidianFileContent += "---\n"
+        
+        rank += 1
+        
+        with open(f"Output/TierFiles/{obsidianFileName}", "w") as file:
+            file.write(obsidianFileContent)
 
-if ("Player Stats" not in WorkBook.sheetnames):
-    WorkBook.create_sheet("Player Stats")
-WorkSheet = WorkBook["Player Stats"]
-AddDataFrameAsTable(StatsSheet, WorkSheet, "PlayerStats")
+def GenerateObsidianFranchiseFiles ():
+        
+    os.makedirs(f"Output/FranchiseFiles", exist_ok=True)
+    
+    franchises = TeamInfoTable["Franchise"].unique()
+    
+    for franchise in franchises:
+        
+        links = []
+        teamsOnFranchise = TeamInfoTable[TeamInfoTable["Franchise"] == franchise]
+        
+        links.append(teamsOnFranchise["Tier"].values)
+        links.append(teamsOnFranchise["Team"].values)
+        
+        obsidianFileName = sanitize_filename(franchise) + ".md"
+        
+        obsidianFileContent = "---\n"
+        obsidianFileContent += f"Franchise: {franchise}\n"
+        
+        obsidianFileContent += "Ranks:\n"
+        for tier in teamsOnFranchise["Tier"].values:
+            obsidianFileContent += f"  - \"[[{tier}]]\"\n"
+            
+        obsidianFileContent += "Teams:\n"
+        for tier in teamsOnFranchise["Team"].values:
+            obsidianFileContent += f"  - \"[[{tier}]]\"\n"
+        
+        obsidianFileContent += "---\n"
+        
+        obsidianFileContent += f"# {franchise}\n---\n"
+        obsidianFileContent += f"## Teams\n---\n"
+        
+        for i in range(len(links[0])):
+            obsidianFileContent += f"[[{links[1][i]}]] ([[{links[0][i]}]])\n"
+        
+        with open(f"Output/FranchiseFiles/{obsidianFileName}", "w") as file:
+            file.write(obsidianFileContent)
+    
+def GenerateObsidianTeamFiles ():
+        
+    os.makedirs(f"Output/TeamFiles", exist_ok=True)
+    
+    nonLinkItems = ["Team", "Conference", "SBV"]
+    linkItems = ["Tier", "Franchise"]
+    
+    stat_labels = {
+    "WP": "Win Percentage",
+    "W": "Wins",
+    "L": "Losses",
+    "P": "Points",
+    "SP": "Standard Points",
+    "NP": "Non-Standard Points",
+    "G": "Goals",
+    "A": "Assists",
+    "Sv": "Saves",
+    "S": "Shots",
+    "S%": "Shot Percentage",
+    "P/A": "Points per Average",
+    "SP/A": "Standard Points per Average",
+    "NP/A": "Non-Standard Points per Average",
+    "G/A": "Goals per Average",
+    "A/A": "Assists per Average",
+    "Sv/A": "Saves per Average",
+    "S/A": "Shots per Average",
+    "P/G": "Points per Game",
+    "SP/G": "Standard Points per Game",
+    "NP/G": "Non-Standard Points per Game",
+    "G/G": "Goals per Game",
+    "A/G": "Assists per Game",
+    "Sv/G": "Saves per Game",
+    "S/G": "Shots per Game",
+    "opp_G": "Opponent Goals",
+    "opp_G/A": "Opponent Goals per Average",
+    "opp_G/G": "Opponent Goals per Game"
+}
+    
+    for index, teamRow in TeamInfoTable.iterrows():
+        team = teamRow["Team"]
+        
+        obsidianFileName = sanitize_filename(team) + ".md"
+        
+        obsidianFileContent = "---\n"
+        
+        for item in linkItems:
+            obsidianFileContent += f"{item}: [[{teamRow[item].replace("\n", "")}]]\n"
+        
+        for item in nonLinkItems:
+            obsidianFileContent += f"{item}: {teamRow[item]}\n"
+            
+        for item in stat_labels.keys():
+            obsidianFileContent += f"{stat_labels[item]}: {teamRow[item]}\n"
+        
+        obsidianFileContent += "---\n"
+    
+        with open(f"Output/TeamFiles/{obsidianFileName}", "w") as file:
+            file.write(obsidianFileContent)
 
-if ("Team Stats" not in WorkBook.sheetnames):
-    WorkBook.create_sheet("Team Stats")
-WorkSheet = WorkBook["Team Stats"]
-AddDataFrameAsTable(TeamInfoTable, WorkSheet, "TeamStats")
+def GenerateObsidianPlayerFiles ():
+    
+    unlinkedItems = ["Name", "RSC ID", "Tier", "Conference", "SBV", "IDR", "RPV"]
+    linkedItems = ["Tier"]
+    
+    stat_labels = {
+    "WP": "Win Percentage",
+    "W": "Wins",
+    "L": "Losses",
+    "P": "Points",
+    "SP": "Standard Points",
+    "NP": "Non-Standard Points",
+    "G": "Goals",
+    "A": "Assists",
+    "Sv": "Saves",
+    "S": "Shots",
+    "S%": "Shot Percentage",
+    "P/A": "Points per Average",
+    "SP/A": "Standard Points per Average",
+    "NP/A": "Non-Standard Points per Average",
+    "G/A": "Goals per Average",
+    "A/A": "Assists per Average",
+    "Sv/A": "Saves per Average",
+    "S/A": "Shots per Average",
+    "P/G": "Points per Game",
+    "SP/G": "Standard Points per Game",
+    "NP/G": "Non-Standard Points per Game",
+    "G/G": "Goals per Game",
+    "A/G": "Assists per Game",
+    "Sv/G": "Saves per Game",
+    "S/G": "Shots per Game",
+    "opp_G": "Opponent Goals",
+    "opp_G/A": "Opponent Goals per Average",
+    "opp_G/G": "Opponent Goals per Game"
+}
+    
+    os.makedirs(f"Output/PlayerFiles", exist_ok=True)
+    
+    for index, playerRow in StatsSheet.iterrows():
+        
+        playerName = sanitize_filename(playerRow["Name"])
+        obsidianFileName = playerName + ".md"
+        
+        obsidianFileContent = "---\n"
+        
+        
+        obsidianFileContent += f"Teams:\n"
+        
+        for team in playerRow["Team"].split("\n"):
+            obsidianFileContent += f"  - \"[[{sanitize_filename(team)}]]\"\n"
+        
+        for item in linkedItems:
+            obsidianFileContent += f"{item}: [[{playerRow[item].replace("\n", "")}]]\n"
+            
+        for item in unlinkedItems:
+            obsidianFileContent += f"{item}: {playerRow[item]}\n"
+            
+        for item in stat_labels.keys():
+            obsidianFileContent += f"{stat_labels[item]}: {playerRow[item]}\n"
+        
+        obsidianFileContent += "---\n"
+        
+        with open(f"Output/PlayerFiles/{obsidianFileName}", "w") as file:
+            file.write(obsidianFileContent)
 
-WorkBook.save("RSC_Info.xlsx")
-
-print("GM Excel Sheet Generated Successfully!")
+GenerateObsidianTierFiles()
+GenerateObsidianFranchiseFiles()
+GenerateObsidianTeamFiles()
+GenerateObsidianPlayerFiles()
