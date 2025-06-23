@@ -258,7 +258,7 @@ def GetTeamSheet (teamInfo):
 
 def GenerateObsidianTierFiles ():
     
-    os.makedirs(f"Output/TierFiles", exist_ok=True)
+    os.makedirs(f"Output/Tiers", exist_ok=True)
     
     rank = 1
     
@@ -274,12 +274,12 @@ def GenerateObsidianTierFiles ():
         
         rank += 1
         
-        with open(f"Output/TierFiles/{obsidianFileName}", "w") as file:
+        with open(f"Output/Tiers/{obsidianFileName}", "w") as file:
             file.write(obsidianFileContent)
 
 def GenerateObsidianFranchiseFiles ():
         
-    os.makedirs(f"Output/FranchiseFiles", exist_ok=True)
+    os.makedirs(f"Output/Franchises", exist_ok=True)
     
     franchises = TeamInfoTable["Franchise"].unique()
     
@@ -312,12 +312,12 @@ def GenerateObsidianFranchiseFiles ():
         for i in range(len(links[0])):
             obsidianFileContent += f"[[{links[1][i]}]] ([[{links[0][i]}]])\n"
         
-        with open(f"Output/FranchiseFiles/{obsidianFileName}", "w") as file:
+        with open(f"Output/Franchises/{obsidianFileName}", "w") as file:
             file.write(obsidianFileContent)
     
 def GenerateObsidianTeamFiles ():
         
-    os.makedirs(f"Output/TeamFiles", exist_ok=True)
+    os.makedirs(f"Output/Teams", exist_ok=True)
     
     nonLinkItems = ["Team", "Conference", "SBV"]
     linkItems = ["Tier", "Franchise"]
@@ -373,7 +373,7 @@ def GenerateObsidianTeamFiles ():
         
         obsidianFileContent += "---\n"
     
-        with open(f"Output/TeamFiles/{obsidianFileName}", "w") as file:
+        with open(f"Output/Teams/{obsidianFileName}", "w") as file:
             file.write(obsidianFileContent)
 
 def GenerateObsidianPlayerFiles ():
@@ -414,7 +414,7 @@ def GenerateObsidianPlayerFiles ():
     "Current Team": "Team"
     }
     
-    os.makedirs(f"Output/PlayerFiles", exist_ok=True)
+    os.makedirs(f"Output/Players", exist_ok=True)
     
     for index, playerRow in StatsSheet.iterrows():
         
@@ -447,7 +447,7 @@ def GenerateObsidianPlayerFiles ():
         
         obsidianFileContent += "---\n"
         
-        with open(f"Output/PlayerFiles/{obsidianFileName}", "w") as file:
+        with open(f"Output/Players/{obsidianFileName}", "w") as file:
             file.write(obsidianFileContent)
 
 print("Match Day Schedules Extracted Successfully!")
