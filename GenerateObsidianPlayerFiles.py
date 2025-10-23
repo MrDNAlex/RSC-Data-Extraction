@@ -350,7 +350,7 @@ def GenerateObsidianTeamFiles ():
 
 def GenerateObsidianPlayerFiles ():
     
-    unlinkedItems = ["Name", "RSC ID", "Tier", "SBV", "IDR", "RPV"]
+    unlinkedItems = ["Name", "RSC ID", "SBV", "IDR", "RPV"]
     linkedItems = ["Tier"]
     
     stat_labels = {
