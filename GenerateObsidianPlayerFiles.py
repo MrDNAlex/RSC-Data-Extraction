@@ -75,13 +75,14 @@ print("Extracting Match Day Schedules...")
 #TierInfo.append({"matchSheetName": schedulePages[0], "scrimSheetName" : schedulePages[9], "skiprowsMatch": 445, "usecolsMatch": "B:K", "nrowsMatch": 464 - 446,  "skiprowsScrim": 13, "usecolsScrim": "B:k", "nrowsScrim": 30-14, "preseasonDays": 3, "matchDays": 15, "playoffDays": 1, "spacing": 4, "matchDaysScrim": 16, "spacingScrim" : 2, "hasLunarConference": False, "hasDivisions": False})
 
 NumberOfPlayers = 841
+NumberOfTeams = 177
 
 StatsInfo = []
 StatsInfo.append({"sheet" : RPVSheet, "sheetName": "Sorted RPV", "skiprows": 4, "usecols": "A:AD", "nrows": NumberOfPlayers})
 StatsInfo.append({"sheet" : SBVSheet,"sheetName": "Sorted Player Stats", "skiprows": 0, "usecols": "A:AR", "nrows": NumberOfPlayers})
 StatsInfo.append({"sheet" : IDRSheet,"sheetName": "IDR View", "skiprows": 4, "usecols": "A:AQ", "nrows": NumberOfPlayers})
 
-TeamsInfoCoords = { "sheet" : SBVSheet, "sheetName" : "Sorted Team Stats", "skiprows": 0, "usecols": "A:AK", "nrows": 177 }
+TeamsInfoCoords = { "sheet" : SBVSheet, "sheetName" : "Sorted Team Stats", "skiprows": 0, "usecols": "A:AK", "nrows": NumberOfTeams }
 
 MatchScheduleSheets = {}
 ScrimScheduleSheets = {}
