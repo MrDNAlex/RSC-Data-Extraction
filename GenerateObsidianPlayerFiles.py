@@ -4,10 +4,10 @@ from openpyxl.worksheet.table import Table
 from openpyxl.utils import get_column_letter
 import re
 
-SchedulePath = "InputS23/RSC_Schedule.xlsx"
-RPVPath = "InputS23/RSC_RPV.xlsx"
-SBVPath = "InputS23/RSC_SBV.xlsx"
-IDRPath = "InputS23/RSC_IDR.xlsx"
+SchedulePath = "InputS24/RSC_Schedule.xlsx"
+RPVPath = "InputS24/RSC_RPV.xlsx"
+SBVPath = "InputS24/RSC_SBV.xlsx"
+IDRPath = "InputS24/RSC_IDR.xlsx"
 
 # Check if all Stats Files Exist
 if not os.path.exists(SchedulePath):
@@ -419,7 +419,7 @@ def GenerateObsidianPlayerFiles ():
         
         obsidianFileContent += "---\n"
         
-        with open(f"Output/Players/{obsidianFileName}", "w") as file:
+        with open(f"Output/Players/{obsidianFileName}", "w", encoding="utf-8", newline="\n") as file:
             file.write(obsidianFileContent)
 
 print("Match Day Schedules Extracted Successfully!")
