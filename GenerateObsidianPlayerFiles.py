@@ -74,8 +74,8 @@ print("Extracting Match Day Schedules...")
 #TierInfo.append({"matchSheetName": schedulePages[0], "scrimSheetName" : schedulePages[8], "skiprowsMatch": 394, "usecolsMatch": "B:H", "nrowsMatch": 438 - 395,  "skiprowsScrim": 13, "usecolsScrim": "B:L", "nrowsScrim": 49-14, "preseasonDays": 3, "matchDays": 16, "playoffDays": 3, "spacing": 4, "matchDaysScrim": 16, "spacingScrim" : 2, "hasLunarConference": True, "hasDivisions": False})
 #TierInfo.append({"matchSheetName": schedulePages[0], "scrimSheetName" : schedulePages[9], "skiprowsMatch": 445, "usecolsMatch": "B:K", "nrowsMatch": 464 - 446,  "skiprowsScrim": 13, "usecolsScrim": "B:k", "nrowsScrim": 30-14, "preseasonDays": 3, "matchDays": 15, "playoffDays": 1, "spacing": 4, "matchDaysScrim": 16, "spacingScrim" : 2, "hasLunarConference": False, "hasDivisions": False})
 
-NumberOfPlayers = 841
-NumberOfTeams = 177
+NumberOfPlayers = 801
+NumberOfTeams = 169
 
 StatsInfo = []
 StatsInfo.append({"sheet" : RPVSheet, "sheetName": "Sorted RPV", "skiprows": 4, "usecols": "A:AD", "nrows": NumberOfPlayers})
